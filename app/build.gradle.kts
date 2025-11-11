@@ -70,5 +70,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.22")
     androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.22")
+    implementation("androidx.activity:activity-ktx:1.8.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }
 

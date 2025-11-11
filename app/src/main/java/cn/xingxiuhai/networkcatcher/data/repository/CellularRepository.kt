@@ -12,9 +12,10 @@ import cn.xingxiuhai.networkcatcher.data.model.CellularInfo
 import android.util.Log
 
 
+
 class CellularRepository {
     @RequiresApi(Build.VERSION_CODES.Q)
-
+    @RequiresPermission(anyOf = ["android.permission.READ_PHONE_STATE","android.permission.READ_BASIC_PHONE_STATE"])
     fun getCellularInfo(context: Context): CellularInfo {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -45,19 +46,22 @@ class CellularRepository {
 
                     val networkType = telephonyManager.dataNetworkType
                     val networkTypeName = when (networkType) {
-                        TelephonyManager.NETWORK_TYPE_LTE -> "LTE（4G）"
-                        TelephonyManager.NETWORK_TYPE_NR -> "NR（5G）"
-                        // 其他常见类型（可选补充）
-                        TelephonyManager.NETWORK_TYPE_GSM -> "GSM（2G）"
-                        TelephonyManager.NETWORK_TYPE_UMTS -> "UMTS（3G）"
-                        TelephonyManager.NETWORK_TYPE_HSDPA -> "HSDPA（3.5G）"
-                        TelephonyManager.NETWORK_TYPE_HSPAP -> "HSPAP（3.75G）"
+                        TelephonyManager.NETWORK_TYPE_UNKNOWN -> "Unknown"
+                        TelephonyManager.NETWORK_TYPE_GPRS -> "GSMGPRS（2.5G）"
+                        TelephonyManager.NETWORK_TYPE_EDGE-> "GSMEDGE（2.75G）"
+                        TelephonyManager.NETWORK_TYPE_UMTS->"UMTS（3G）"
+                        TelephonyManager.NETWORK_TYPE_HSDPA->"HSDPA（3.5G）"
+                        TelephonyManager.NETWORK_TYPE_HSUPA->"HSUPA（3.5G）"
+                        TelephonyManager.NETWORK_TYPE_HSPA->"HSPA（3.5G）"
+                        TelephonyManager.NETWORK_TYPE_LTE->"LTE（4G）"
+                        TelephonyManager.NETWORK_TYPE_HSPAP->"HSPAP（3.75G）"
+                        TelephonyManager.NETWORK_TYPE_NR->"NR（5G）"
                         else -> "Unknown"
                     }
                     return CellularInfo(
-                        networkOperator ?: "",
-                        networkOperatorName ?: "",
-                        networkTypeName
+                        networkOperator ?: "Unknown",
+                        networkOperatorName ?: "Unknown",
+                        networkTypeName?: "Unknown"
                     )
                 }
                 // 判断是否为以太网

@@ -1,47 +1,44 @@
 package cn.xingxiuhai.networkcatcher.ui.screen
 
-
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-
-import androidx.core.content.ContextCompat
-
-import androidx.navigation.NavHostController
-import cn.xingxiuhai.networkcatcher.data.model.CellularInfo
-
-import cn.xingxiuhai.networkcatcher.ui.component.CommonTemplate
-
-import cn.xingxiuhai.networkcatcher.data.repository.CellularRepository
-
-
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-
-
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cn.xingxiuhai.networkcatcher.domain.model.UiCellularInfo
-import cn.xingxiuhai.networkcatcher.domain.model.UiDeviceInfo
+import androidx.navigation.NavHostController
+import cn.xingxiuhai.networkcatcher.ui.component.CommonTemplate
 import cn.xingxiuhai.networkcatcher.viewmodel.CellularInfoViewModel
-import cn.xingxiuhai.networkcatcher.viewmodel.DeviceInfoViewModel
 
-
-// 1. 修改 Greeting 组件，接收获取设备信息的方法，而非 Activity
 @Composable
 fun CellularScreen(navController: NavHostController) {
     val context = LocalContext.current
-    // 权限状态：是否已授予
+    // 获取当前 Activity 实例（关键修复）
+    val activity = context as? Activity // 安全转换为 Activity
+
+    val cellularInfoViewModel: CellularInfoViewModel = viewModel()
+
+    // 1. 权限状态管理
     var isPermissionGranted by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -50,29 +47,26 @@ fun CellularScreen(navController: NavHostController) {
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
-    // 注册权限请求 launcher
+
+    // 2. 注册权限请求 Launcher
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         isPermissionGranted = granted
-        // 处理权限结果
-        if (granted) {
-            performActionWithPhonePermission()
-        } else {
-            showPermissionDeniedMessage()
-        }
     }
-    // 初始检查：如果未授权，可在界面加载时申请（或用户点击按钮时申请）
-    LaunchedEffect(Unit) {
-        if (!isPermissionGranted) {
-            // 此处可选择延迟申请，或在用户触发操作时申请（推荐后者）
-             requestPermissionLauncher.launch(android.Manifest.permission.READ_PHONE_STATE)
+
+    // 观察数据
+    val cellularInfo by cellularInfoViewModel.uiCellularInfo.collectAsStateWithLifecycle()
+
+    // 3. 权限变更时加载数据
+    LaunchedEffect(isPermissionGranted) {
+        if (isPermissionGranted) {
+            cellularInfoViewModel.loadCellularInfo(context)
         }
     }
 
-    val cellularInfoViewModel: CellularInfoViewModel = viewModel()
-    val cellularInfo: UiCellularInfo = cellularInfoViewModel.getCellularInfo(LocalContext.current)
-
+    // 4. 低版本判断
+    val isLowVersion = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
 
     CommonTemplate(navController = navController) {
         Column(
@@ -80,23 +74,53 @@ fun CellularScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(all = 16.dp)
         ) {
-            Text("蜂窝")
-            Text(text = cellularInfo.formattednetworkOperator)
-            Text(text = cellularInfo.formattednetworkOperatorName)
-            Text(text = cellularInfo.formattednetworkTypeName)
+            Text("蜂窝网络信息", modifier = Modifier.padding(bottom = 16.dp))
+
+            when {
+                isLowVersion -> {
+                    Text(text = "该功能需要 Android 10（API 29）及以上版本支持")
+                }
+                isPermissionGranted -> {
+                    val operator = cellularInfo.formattednetworkOperator.takeIf { it.isNotEmpty() } ?: "未知"
+                    val operatorName = cellularInfo.formattednetworkOperatorName.takeIf { it.isNotEmpty() } ?: "未知"
+                    val networkType = cellularInfo.formattednetworkTypeName.takeIf { it.isNotEmpty() } ?: "未知"
+
+                    Text(text = "$operator")
+                    Text(text = "$operatorName", modifier = Modifier.padding(vertical = 4.dp))
+                    Text(text = "$networkType")
+                }
+                else -> {
+                    Text("需要电话状态权限才能获取蜂窝网络信息", modifier = Modifier.padding(bottom = 16.dp))
+
+                    Button(
+                        onClick = {
+                            requestPermissionLauncher.launch(android.Manifest.permission.READ_PHONE_STATE)
+                        }
+                    ) {
+                        Text("申请权限")
+                    }
+
+                    // 修复：通过 Activity 实例调用 shouldShowRequestPermissionRationale
+                    val showSettingsButton = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                            activity != null && // 确保 Activity 不为空
+                            !activity.shouldShowRequestPermissionRationale(android.Manifest.permission.READ_PHONE_STATE)
+
+                    if (showSettingsButton) {
+                        Button(
+                            onClick = {
+                                val intent = Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.parse("package:${context.packageName}")
+                                )
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text("前往设置开启权限")
+                        }
+                    }
+                }
+            }
         }
     }
-
-
-
 }
-
-fun showPermissionDeniedMessage() {
-    TODO("Not yet implemented")
-}
-
-fun performActionWithPhonePermission() {
-
-}
-
-
