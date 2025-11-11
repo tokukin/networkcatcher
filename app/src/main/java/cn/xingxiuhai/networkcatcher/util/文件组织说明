@@ -1,0 +1,4 @@
+util/
+├── DeviceInfoHelper.kt  // 设备信息工具类（获取型号、系统版本等）
+├── NetworkUtils.kt      // 网络工具类（检查网络连接、获取 IP 等）
+└── Constants.kt         // 常量定义（如 API 地址、SharedPreferences 键名）

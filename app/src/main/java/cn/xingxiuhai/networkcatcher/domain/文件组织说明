@@ -1,0 +1,6 @@
+domain/
+├── usecase/             // 用例类（单一业务操作，如“获取设备信息”“检查网络状态”）
+│   ├── GetDeviceInfoUseCase.kt
+│   └── CheckNetworkUseCase.kt
+└── model/               // 领域模型（UI 层需要的数据格式，可能与 data 层模型不同）
+    └── UiDeviceInfo.kt  // 适配 UI 展示的设备信息模型

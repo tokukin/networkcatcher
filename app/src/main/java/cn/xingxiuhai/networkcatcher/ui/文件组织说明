@@ -1,0 +1,12 @@
+ui/
+├── screen/              // 完整页面（使用模板组件的页面）
+│   ├── HomeScreen.kt    // 首页（复用 CommonTemplate）
+│   ├── DeviceInfoScreen.kt // 设备信息页
+│   └── NetworkScreen.kt // 网络信息页
+├── component/           // 通用 UI 组件（可复用的小部件）
+│   ├── CommonTemplate.kt // 通用模板组件（标题栏+内容区+底部按钮）
+│   ├── CustomButton.kt  // 自定义按钮
+│   └── InfoCard.kt      // 信息展示卡片
+└── navigation/          // 导航相关（页面跳转配置）
+    ├── AppNavHost.kt    // 导航宿主
+    └── NavRoutes.kt     // 路由常量（如 "home"、"device_info"）

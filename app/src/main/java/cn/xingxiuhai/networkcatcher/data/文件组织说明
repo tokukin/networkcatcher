@@ -1,0 +1,11 @@
+data/
+├── model/               // 数据模型（与后端/数据库交互的实体类）
+│   ├── DeviceInfo.kt    // 设备信息数据类（如设备型号、系统版本）
+│   └── NetworkData.kt   // 网络相关数据类
+├── repository/          // 仓库类（统一数据入口，协调多种数据源）
+│   ├── DeviceRepository.kt  // 设备信息仓库（封装获取设备信息的逻辑）
+│   └── NetworkRepository.kt // 网络数据仓库
+├── remote/              // 远程数据源（网络请求，如 Retrofit 接口）
+│   └── ApiService.kt    // 网络接口定义
+└── local/               // 本地数据源（数据库、SharedPreferences 等）
+    └── DeviceDao.kt     // 设备信息本地存储接口

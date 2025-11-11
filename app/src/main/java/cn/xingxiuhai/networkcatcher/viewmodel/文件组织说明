@@ -1,0 +1,4 @@
+viewmodel/
+├── HomeViewModel.kt     // 首页 ViewModel
+├── DeviceInfoViewModel.kt // 设备信息页 ViewModel
+└── NetworkViewModel.kt  // 网络信息页 ViewModel
